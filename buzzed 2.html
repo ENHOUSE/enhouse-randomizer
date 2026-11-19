@@ -71,7 +71,26 @@ function render(){if(!state){$('setup').classList.remove('hidden');$('game').cla
 function award(id){let p=state.players.find(p=>p.id===id);if(!p)return;snapshot();let extra=state.armed===id?2:0;p.score+=points[roundAt(state.index)]+extra;if(extra)p.bonusUsed=true;state.armed=null;save();render()}
 $('reveal').onclick=()=>{snapshot();state.revealed=!state.revealed;save();render()};
 function publishAudienceState() {
-  console.log("Audience sync ready");
+  if (!state) return;
+
+  const q = state.questions?.[state.index];
+
+  const audienceData = {
+    category: q?.category || "",
+    question: q?.q || "",
+    answer: state.revealed ? (q?.a || "") : "",
+    showAnswer: Boolean(state.revealed),
+    scores: state.players.map(p => ({
+      name: p.name,
+      score: p.score
+    }))
+  };
+
+  fetch("https://enhouse-get-buzzed-default-rtdb.firebaseio.com/games/demo.json", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(audienceData)
+  }).catch(error => console.error("Audience sync failed:", error));
 }
 $('next').onclick=()=>{snapshot();let old=state.index;state.armed=null;state.revealed=false;if(old===9||old===14||old===19){state.phase='standings';state.completedRound=roundAt(old);const low=Math.min(...state.players.map(p=>p.score));const tied=state.players.filter(p=>p.score===low);state.roulette={playerId:tied[Math.floor(Math.random()*tied.length)].id,spun:false,result:null}}else state.index++;save();render()};
 const WHEEL_OUTCOMES=[
