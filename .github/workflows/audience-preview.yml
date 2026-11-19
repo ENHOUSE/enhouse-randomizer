@@ -1,0 +1,28 @@
+name: Audience Mode Preview
+
+on:
+  push:
+    branches:
+      - audience-mode-dev
+  workflow_dispatch:
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get development files
+        uses: actions/checkout@v4
+
+      - name: Package preview
+        run: |
+          mkdir -p preview
+          cp audience-test.html preview/index.html
+          cp audience.html preview/
+          cp "buzzed 2.html" preview/
+          cp apple-touch-icon.png preview/
+
+      - name: Upload preview artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: get-buzzed-audience-preview
+          path: preview/
