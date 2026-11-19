@@ -86,7 +86,7 @@ function publishAudienceState() {
     }))
   };
 
-  fetch("https://enhouse-get-buzzed-default-rtdb.firebaseio.com/games/demo.json", {
+ fetch("https://enhouse-get-buzzed-default-rtdb.firebaseio.com/sessions/demo.json", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(audienceData)
