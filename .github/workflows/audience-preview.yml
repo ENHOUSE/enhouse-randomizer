@@ -1,3 +1,4 @@
+
 name: Audience Mode Preview
 
 on:
@@ -5,6 +6,15 @@ on:
     branches:
       - audience-mode-dev
   workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: audience-mode-preview
+  cancel-in-progress: true
 
 jobs:
   preview:
@@ -26,3 +36,14 @@ jobs:
         with:
           name: get-buzzed-audience-preview
           path: preview/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: preview/
+
+      - name: Deploy preview
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          preview: true
