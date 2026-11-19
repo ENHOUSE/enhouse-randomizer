@@ -19,6 +19,10 @@ concurrency:
 jobs:
   preview:
     runs-on: ubuntu-latest
+    
+    environment:
+      name: github-pages
+
     steps:
       - name: Get development files
         uses: actions/checkout@v4
