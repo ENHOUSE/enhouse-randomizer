@@ -86,11 +86,32 @@ function publishAudienceState() {
     }))
   };
 
- fetch("https://enhouse-get-buzzed-default-rtdb.firebaseio.com/sessions/demo.json", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(audienceData)
-  }).catch(error => console.error("Audience sync failed:", error));
+ 
+window.getBuzzedAuth?.authStateReady().then(async () => {
+  const auth = window.getBuzzedAuth;
+  if (!auth.currentUser) {
+    console.error("Audience sync: host not signed in");
+    return;
+  }
+
+  const token = await auth.currentUser.getIdToken();
+
+  const response = await fetch(
+    "https://enhouse-get-buzzed-default-rtdb.firebaseio.com/sessions/demo.json?auth=" + encodeURIComponent(token),
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...audienceData,
+        hostUid: auth.currentUser.uid
+      })
+    }
+  );
+
+  if (!response.ok) {
+    console.error("Audience sync failed:", response.status, await response.text());
+  }
+}).catch(error => console.error("Audience sync failed:", error));
 }
 $('next').onclick=()=>{snapshot();let old=state.index;state.armed=null;state.revealed=false;if(old===9||old===14||old===19){state.phase='standings';state.completedRound=roundAt(old);const low=Math.min(...state.players.map(p=>p.score));const tied=state.players.filter(p=>p.score===low);state.roulette={playerId:tied[Math.floor(Math.random()*tied.length)].id,spun:false,result:null}}else state.index++;save();render()};
 const WHEEL_OUTCOMES=[
