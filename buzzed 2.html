@@ -157,4 +157,29 @@ $('cancel').onclick=()=>{if(state.armed===null)return;snapshot();state.armed=nul
 $('wrong').onclick=()=>{if(state.armed===null)return;snapshot();let p=state.players.find(p=>p.id===state.armed);p.score-=2;p.bonusUsed=true;state.armed=null;save();render()};
 function newGame(){if(!confirm('Start over? Current BUZZED! scores will be cleared. Your Randomizer data will not be affected.'))return;clearTimeout(wheelTimer);wheelBusy=false;localStorage.removeItem(STORE);state=null;history=[];renderSetup();render()}
 $('restart').onclick=newGame;$('standNew').onclick=newGame;renderSetup();
-</script></body></html>
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyANUpRGYD1MLS-m-E0PnCrwzyBMrDReyoQ",
+  authDomain: "enhouse-get-buzzed.firebaseapp.com",
+  databaseURL: "https://enhouse-get-buzzed-default-rtdb.firebaseio.com",
+  projectId: "enhouse-get-buzzed",
+  storageBucket: "enhouse-get-buzzed.firebasestorage.app",
+  messagingSenderId: "436362620995",
+  appId: "1:436362620995:web:37e189236f11a53ea724f6"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+signInAnonymously(auth)
+  .then(() => console.log("Host Firebase authentication successful"))
+  .catch(error => console.error("Host authentication failed:", error));
+
+</script>
+
+</body></html>
