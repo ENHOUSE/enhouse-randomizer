@@ -68,7 +68,7 @@ $('resume').onclick=()=>{state=load();history=[];render()};
 function snapshot(){history.push(JSON.stringify(state));if(history.length>50)history.shift()}
 function render(){
   publishAudienceState();if(!state){$('setup').classList.remove('hidden');$('game').classList.add('hidden');$('standings').classList.add('hidden');return} $('setup').classList.add('hidden');$('game').classList.toggle('hidden',state.phase!=='game');$('standings').classList.toggle('hidden',state.phase==='game');if(state.phase!=='game'){renderStandings();return}let i=state.index,r=roundAt(i),q=state.questions[i];$('round').textContent=titles[r];$('qnum').textContent=`QUESTION ${i+1} OF 20`;$('value').textContent=`+${points[r]} POINT${points[r]>1?'S':''}`;$('category').textContent=q.category;$('question').textContent=q.q;$('answer').textContent=`ANSWER: ${q.a}`;$('answer').classList.toggle('hidden',!state.revealed);$('reveal').textContent=state.revealed?'Hide Answer':'Reveal Answer';$('players').innerHTML='';state.players.forEach(p=>{let b=document.createElement('button');b.className='player';b.innerHTML=`<span>${escapeHTML(p.name)}</span><b>${p.score}</b><small>${p.bonusUsed?'Bonus used':'Bonus available'}</small>`;b.onclick=()=>award(p.id);$('players').appendChild(b)});$('bonusStatus').textContent=state.armed===null?'No bonus armed':`Bonus armed for ${state.players.find(p=>p.id===state.armed)?.name||''}`;$('arm').disabled=state.armed!==null||state.players.every(p=>p.bonusUsed);$('wrong').disabled=state.armed===null;$('cancel').disabled=state.armed===null;$('undo').disabled=history.length===0}
-function award(id){let p=state.players.find(p=>p.id===id);if(!p)return;snapshot();let extra=state.armed===id?2:0;p.score+=points[roundAt(state.index)]+extra;if(extra)p.bonusUsed=true;state.armed=null;save();render()}
+function award(id){let p=state.players.find(p=>p.id===id);if(!p)return;snapshot();let extra=state.armed===id?2:0;p.score+=points[roundAt(state.index)]+extra;if(extra)p.bonusUsed=true;state.armed=null;state.lastAward={name:p.name,points:points[roundAt(state.index)]+extra,id:Date.now()};save();render()}
 $('reveal').onclick=()=>{snapshot();state.revealed=!state.revealed;save();render()};
 function publishAudienceState() {
   if (!state) return;
@@ -83,7 +83,8 @@ function publishAudienceState() {
     scores: state.players.map(p => ({
       name: p.name,
       score: p.score
-    }))
+    })),
+    lastAward: state.lastAward || null
   };
 
  
@@ -113,7 +114,7 @@ window.getBuzzedAuth?.authStateReady().then(async () => {
   }
 }).catch(error => console.error("Audience sync failed:", error));
 }
-$('next').onclick=()=>{snapshot();let old=state.index;state.armed=null;state.revealed=false;if(old===9||old===14||old===19){state.phase='standings';state.completedRound=roundAt(old);const low=Math.min(...state.players.map(p=>p.score));const tied=state.players.filter(p=>p.score===low);state.roulette={playerId:tied[Math.floor(Math.random()*tied.length)].id,spun:false,result:null}}else state.index++;save();render()};
+$('next').onclick=()=>{snapshot();state.lastAward=null;let old=state.index;state.armed=null;state.revealed=false;if(old===9||old===14||old===19){state.phase='standings';state.completedRound=roundAt(old);const low=Math.min(...state.players.map(p=>p.score));const tied=state.players.filter(p=>p.score===low);state.roulette={playerId:tied[Math.floor(Math.random()*tied.length)].id,spun:false,result:null}}else state.index++;save();render()};
 const WHEEL_OUTCOMES=[
  {name:'🥃 SHOT!',detail:'Take a shot — or choose a nonalcoholic alternative.'},
  {name:'🥃 DOUBLE TROUBLE',detail:'Take two small sips, or choose an alternative.'},
@@ -171,11 +172,11 @@ $('spinWheel').onclick=()=>{
    }
  },4600);
 };
-$('continue').onclick=()=>{if(state.phase!=='standings'||state.completedRound===2||!state.roulette?.spun||wheelBusy)return;snapshot();state.index=state.completedRound===0?10:15;state.phase='game';state.revealed=false;state.armed=null;state.roulette=null;save();render()};
+$('continue').onclick=()=>{if(state.phase!=='standings'||state.completedRound===2||!state.roulette?.spun||wheelBusy)return;snapshot();state.index=state.completedRound===0?10:15;state.lastAward=null;state.phase='game';state.revealed=false;state.armed=null;state.roulette=null;save();render()};
 $('undo').onclick=()=>{if(!history.length)return;state=JSON.parse(history.pop());save();render()};
 $('arm').onclick=()=>{let eligible=state.players.filter(p=>!p.bonusUsed);let name=prompt('Which player is using their one-time BUZZED! Bonus?\n'+eligible.map((p,i)=>`${i+1}. ${p.name}`).join('\n')+'\nEnter player number:');if(name===null)return;let n=Number(name);if(!Number.isInteger(n)||n<1||n>eligible.length){alert('Enter a valid player number.');return}snapshot();state.armed=eligible[n-1].id;save();render()};
 $('cancel').onclick=()=>{if(state.armed===null)return;snapshot();state.armed=null;save();render()};
-$('wrong').onclick=()=>{if(state.armed===null)return;snapshot();let p=state.players.find(p=>p.id===state.armed);p.score-=2;p.bonusUsed=true;state.armed=null;save();render()};
+$('wrong').onclick=()=>{if(state.armed===null)return;snapshot();let p=state.players.find(p=>p.id===state.armed);p.score-=2;p.bonusUsed=true;state.armed=null;state.lastAward={name:p.name,points:-2,id:Date.now()};save();render()};
 function newGame(){if(!confirm('Start over? Current BUZZED! scores will be cleared. Your Randomizer data will not be affected.'))return;clearTimeout(wheelTimer);wheelBusy=false;localStorage.removeItem(STORE);state=null;history=[];renderSetup();render()}
 $('restart').onclick=newGame;$('standNew').onclick=newGame;renderSetup();
 </script>
