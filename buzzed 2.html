@@ -81,7 +81,7 @@ const WHEEL_OUTCOMES=[
 ];
 let wheelBusy=false,wheelRotation=0,wheelTimer=null;
 const wheel=$('rouletteWheel');
-WHEEL_OUTCOMES.forEach((o,i)=>{const slice=document.createElement('div');slice.className='wheel-slice';slice.textContent=o.name.replace(/^\S+\s/, '');const center=(i+.5)*360/WHEEL_OUTCOMES.length;slice.style.transform=`rotate(${center-90}deg) translateY(-50%)`;wheel.appendChild(slice)});
+WHEEL_OUTCOMES.forEach((o,i)=>{const slice=document.createElement('div');slice.className='wheel-slice';slice.textContent=o.name.split(' ')[0];const center=(i+.5)*360/WHEEL_OUTCOMES.length;slice.style.transform=`rotate(${center-90}deg) translateY(-50%)`;wheel.appendChild(slice)});
 function showRoulette(){
  const r=state.roulette;if(!r){$('roulettePanel').classList.add('hidden');return}
  $('roulettePanel').classList.remove('hidden');
